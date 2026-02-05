@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Repeat } from 'lucide-react';
+import { Repeat, Settings } from 'lucide-react';
 
 const CONVERSION_RATE = 595;
 const IDR_EQUIVALENT = 100000;
 
-const Calculator = () => {
+const Calculator = ({ initialBalance, setInitialBalance }) => {
     const [cent, setCent] = useState('');
     const [idr, setIdr] = useState('');
 
@@ -32,9 +32,22 @@ const Calculator = () => {
     };
 
     return (
-        <div className="flex items-center bg-slate-900/60 backdrop-blur-sm border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+        <div className="flex flex-wrap items-center bg-slate-900/60 backdrop-blur-sm border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+            {/* Dynamic Initial Balance Field */}
+            <div className="px-4 py-2 flex flex-col items-start border-r border-slate-800 bg-blue-500/5">
+                <label className="text-[10px] font-black text-blue-500 tracking-widest mb-1 flex items-center gap-1 uppercase">
+                    <Settings size={10} /> Modal Awal (Cent)
+                </label>
+                <input
+                    type="number"
+                    value={initialBalance}
+                    onChange={(e) => setInitialBalance(parseFloat(e.target.value) || 0)}
+                    className="bg-transparent text-blue-400 font-mono text-lg focus:outline-none w-24 md:w-32"
+                />
+            </div>
+
             <div className="px-4 py-2 flex flex-col items-start border-r border-slate-800">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Cent</label>
+                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Konversi Cent</label>
                 <input
                     type="number"
                     value={cent}
@@ -44,12 +57,12 @@ const Calculator = () => {
                 />
             </div>
 
-            <div className="bg-slate-800/50 p-3 text-slate-500">
+            <div className="bg-slate-800/50 p-3 text-slate-500 hidden md:block">
                 <Repeat size={18} />
             </div>
 
             <div className="px-4 py-2 flex flex-col items-start">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">IDR</label>
+                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Estimasi IDR</label>
                 <div className="flex items-center">
                     <span className="text-slate-600 text-xs font-bold mr-1">Rp</span>
                     <input

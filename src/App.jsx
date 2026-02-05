@@ -10,48 +10,63 @@ import { RefreshCcw } from 'lucide-react';
 
 const CONVERSION_RATE = 595;
 const IDR_EQUIVALENT = 100000;
-
 function App() {
+  const [initialBalance, setInitialBalance] = useState(() => {
+    return parseFloat(localStorage.getItem('cent_journal_initial_balance')) || 500000;
+  });
   const [trades, setTrades] = useState([]);
+
   const [filterRange, setFilterRange] = useState('all');
   const [sortBy, setSortBy] = useState('date-desc');
   const [loading, setLoading] = useState(true);
 
-  // Fetch data from Supabase
-  const fetchTrades = async () => {
+  // Fetch Initial Data
+  const fetchData = async () => {
     setLoading(true);
     try {
       if (!supabase) throw new Error('Supabase not configured');
 
-      const { data, error } = await supabase
-        .from('trades')
-        .select('*')
-        .order('date', { ascending: false });
+      // 1. Fetch Trades
+      const tradesRes = await supabase.from('trades').select('*').order('date', { ascending: false });
+      if (tradesRes.error) throw tradesRes.error;
+      const formattedTrades = tradesRes.data.map(t => ({ ...t, pnlCent: t.pnl_cent }));
+      setTrades(formattedTrades);
 
-      if (error) throw error;
-
-      // Map pnl_cent back to pnlCent for frontend consistency if needed
-      // or just adjust the table. Let's adjust the mapping:
-      const formattedData = data.map(t => ({
-        ...t,
-        pnlCent: t.pnl_cent // Mapping backend column to frontend key
-      }));
-
-      setTrades(formattedData);
+      // 2. Fetch Initial Balance from settings
+      const settingsRes = await supabase.from('settings').select('value').eq('key', 'initial_balance').single();
+      if (settingsRes.data) {
+        setInitialBalance(parseFloat(settingsRes.data.value));
+      }
     } catch (error) {
-      console.warn('Using Local Storage fallback:', error.message);
-      // Fallback to localStorage if Supabase fails/not configured
-      const saved = localStorage.getItem('cent_journal_trades');
-      if (saved) setTrades(JSON.parse(saved));
+      console.warn('Sync failed, using localStorage:', error.message);
+      const savedTrades = localStorage.getItem('cent_journal_trades');
+      if (savedTrades) setTrades(JSON.parse(savedTrades));
+      const savedBalance = localStorage.getItem('cent_journal_initial_balance');
+      if (savedBalance) setInitialBalance(parseFloat(savedBalance));
     } finally {
       setLoading(false);
     }
   };
 
-
   useEffect(() => {
-    fetchTrades();
+    fetchData();
   }, []);
+
+  // Sync Initial Balance to DB (Debounced)
+  useEffect(() => {
+    localStorage.setItem('cent_journal_initial_balance', initialBalance);
+
+    const syncBalance = async () => {
+      if (supabase) {
+        await supabase.from('settings').upsert({ key: 'initial_balance', value: initialBalance.toString() });
+      }
+    };
+
+    const timeoutId = setTimeout(syncBalance, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [initialBalance]);
+
+
 
   const addTrade = async (trade) => {
     try {
@@ -142,12 +157,17 @@ function App() {
   }, [trades, filterRange, sortBy]);
 
   const totals = useMemo(() => {
-    const totalCent = processedTrades.reduce((sum, trade) => sum + parseFloat(trade.pnlCent || 0), 0);
+    const totalCentPnL = processedTrades.reduce((sum, trade) => sum + parseFloat(trade.pnlCent || 0), 0);
+    const currentBalance = initialBalance + totalCentPnL;
     return {
-      cent: totalCent,
-      idr: calculateIDR(totalCent)
+      pnlCent: totalCentPnL,
+      pnlIdr: calculateIDR(totalCentPnL),
+      balanceCent: currentBalance,
+      balanceIdr: calculateIDR(currentBalance)
     };
-  }, [processedTrades]);
+  }, [processedTrades, initialBalance]);
+
+
 
   const SectionTitle = ({ title, colorClass, subtitle }) => (
     <div className="mb-6">
@@ -174,7 +194,7 @@ function App() {
             </h1>
             <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">Pelacak Perdagangan Premium</p>
           </div>
-          <Calculator />
+          <Calculator initialBalance={initialBalance} setInitialBalance={setInitialBalance} />
         </header>
 
         {loading ? (
@@ -187,7 +207,9 @@ function App() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               <div className="lg:col-span-3 bg-slate-900/40 backdrop-blur-md border border-slate-800/50 p-6 md:p-8 rounded-[2rem] shadow-2xl">
                 <SectionTitle title="Kurva Ekuitas" colorClass="bg-blue-500" subtitle="Pertumbuhan Saldo Real-time" />
-                <EquityChart trades={processedTrades} />
+                <EquityChart trades={processedTrades} initialBalance={initialBalance} />
+
+
               </div>
               <div className="lg:col-span-1 space-y-4">
                 <Dashboard totals={totals} />

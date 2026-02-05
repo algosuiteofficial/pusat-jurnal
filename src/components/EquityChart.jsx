@@ -9,21 +9,31 @@ import {
     ResponsiveContainer,
 } from 'recharts';
 
-const EquityChart = ({ trades }) => {
+const EquityChart = ({ trades, initialBalance = 0 }) => {
     const chartData = useMemo(() => {
-        // Sort trades by date (ascending) for cumulative calculation
         const sorted = [...trades].sort((a, b) => new Date(a.date) - new Date(b.date));
 
-        let cumulative = 0;
-        return sorted.map((trade, index) => {
+        let cumulative = parseFloat(initialBalance);
+
+        // Add starting point
+        const data = [{
+            name: 'Start',
+            pnl: cumulative,
+            tradePnl: 0
+        }];
+
+        sorted.forEach((trade) => {
             cumulative += parseFloat(trade.pnlCent || 0);
-            return {
+            data.push({
                 name: new Date(trade.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
                 pnl: parseFloat(cumulative.toFixed(2)),
                 tradePnl: trade.pnlCent
-            };
+            });
         });
-    }, [trades]);
+
+        return data;
+    }, [trades, initialBalance]);
+
 
     if (trades.length < 2) {
         return (
