@@ -1,25 +1,28 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, Layout, Target, Activity } from 'lucide-react';
+import { TrendingUp, TrendingDown, Layout, Target, Activity, Wallet } from 'lucide-react';
 
 const StatCard = ({ label, value, subValue, icon: Icon, colorClass, bgColorClass, ringColorClass }) => (
-    <div className="relative overflow-hidden bg-slate-900/40 backdrop-blur-md border border-slate-800/50 p-5 rounded-2xl transition-all hover:bg-slate-900/60 group">
-        <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full blur-3xl opacity-10 ${bgColorClass}`}></div>
-        <div className="relative flex items-center justify-between">
-            <div className="space-y-1">
-                <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{label}</p>
+    <div className="relative overflow-hidden bg-slate-900/60 backdrop-blur-xl border border-slate-800/60 p-5 rounded-2xl transition-all hover:bg-slate-900/80 group shadow-lg">
+        {/* Removed the large blur blob as it was causing visual clutter */}
+        <div className="flex flex-col justify-between h-full">
+            <div className="flex items-start justify-between mb-2">
+                <p className="text-slate-500 text-[9px] font-black uppercase tracking-[0.2em]">{label}</p>
+                <div className={`p-2 rounded-lg ${bgColorClass} ${colorClass} ring-1 ${ringColorClass} bg-opacity-50`}>
+                    <Icon size={16} strokeWidth={2.5} />
+                </div>
+            </div>
+
+            <div className="space-y-0.5">
                 <div className="flex items-baseline gap-1">
                     <span className={`text-2xl font-black font-mono tracking-tighter ${colorClass}`}>
                         {value}
                     </span>
                 </div>
                 {subValue && (
-                    <p className="text-slate-600 text-[10px] font-bold font-mono uppercase tracking-tighter">
+                    <p className="text-slate-600 text-[9px] font-bold font-mono uppercase tracking-widest">
                         {subValue}
                     </p>
                 )}
-            </div>
-            <div className={`p-3 rounded-xl ${bgColorClass} ${colorClass} ring-1 ${ringColorClass}`}>
-                <Icon size={20} />
             </div>
         </div>
     </div>
@@ -46,11 +49,11 @@ const Dashboard = ({ totals, trades = [] }) => {
         <div className="space-y-4">
             {/* Primary Balance */}
             <StatCard
-                label="Saldo Sekarang"
+                label="Saldo Akun"
                 value={totals.balanceCent.toLocaleString('id-ID')}
                 subValue={`≈ Rp ${Math.abs(Math.round(totals.balanceIdr)).toLocaleString('id-ID')}`}
-                icon={Layout}
-                colorClass="text-white"
+                icon={Wallet}
+                colorClass="text-blue-400"
                 bgColorClass="bg-blue-500/10"
                 ringColorClass="ring-blue-500/20"
             />
@@ -72,14 +75,14 @@ const Dashboard = ({ totals, trades = [] }) => {
                     <StatCard
                         label="Win Rate"
                         value={`${stats.winRate}%`}
-                        subValue={`${stats.totalTrades} Total Trades`}
+                        subValue={`${stats.totalTrades} Trade`}
                         icon={Target}
                         colorClass="text-amber-400"
                         bgColorClass="bg-amber-500/10"
                         ringColorClass="ring-amber-500/20"
                     />
                     <StatCard
-                        label="Avg. Profit"
+                        label="Rata-rata Profit"
                         value={stats.avgProfit}
                         icon={Activity}
                         colorClass="text-purple-400"
