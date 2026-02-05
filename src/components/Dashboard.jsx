@@ -1,50 +1,91 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, Wallet, Layout } from 'lucide-react';
+import { TrendingUp, TrendingDown, Layout, Target, Activity } from 'lucide-react';
 
-const Dashboard = ({ totals }) => {
+const StatCard = ({ label, value, subValue, icon: Icon, colorClass, bgColorClass, ringColorClass }) => (
+    <div className="relative overflow-hidden bg-slate-900/40 backdrop-blur-md border border-slate-800/50 p-5 rounded-2xl transition-all hover:bg-slate-900/60 group">
+        <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full blur-3xl opacity-10 ${bgColorClass}`}></div>
+        <div className="relative flex items-center justify-between">
+            <div className="space-y-1">
+                <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{label}</p>
+                <div className="flex items-baseline gap-1">
+                    <span className={`text-2xl font-black font-mono tracking-tighter ${colorClass}`}>
+                        {value}
+                    </span>
+                </div>
+                {subValue && (
+                    <p className="text-slate-600 text-[10px] font-bold font-mono uppercase tracking-tighter">
+                        {subValue}
+                    </p>
+                )}
+            </div>
+            <div className={`p-3 rounded-xl ${bgColorClass} ${colorClass} ring-1 ${ringColorClass}`}>
+                <Icon size={20} />
+            </div>
+        </div>
+    </div>
+);
+
+const Dashboard = ({ totals, trades = [] }) => {
     const isProfit = totals.pnlCent >= 0;
 
-    return (
-        <div className="flex flex-col gap-4">
-            {/* Balance Card */}
-            <div className="relative overflow-hidden bg-slate-900/60 backdrop-blur-md border border-slate-700/50 p-5 rounded-2xl transition-all shadow-xl">
-                <div className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full blur-3xl opacity-10 bg-blue-500"></div>
-                <div className="relative flex items-center justify-between">
-                    <div className="space-y-1">
-                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Saldo Sekarang (Cent)</p>
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-3xl font-black font-mono tracking-tighter text-white">
-                                {totals.balanceCent.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                            </span>
-                        </div>
-                        <p className="text-blue-500/80 text-[10px] font-bold font-mono">
-                            ≈ Rp {Math.abs(Math.round(totals.balanceIdr)).toLocaleString('id-ID')}
-                        </p>
-                    </div>
-                    <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500 ring-1 ring-blue-500/20">
-                        <Layout size={24} />
-                    </div>
-                </div>
-            </div>
+    // Advanced Stats Calculation
+    const stats = React.useMemo(() => {
+        if (!trades.length) return { winRate: 0, totalTrades: 0, avgProfit: 0 };
 
-            {/* PnL Card */}
-            <div className="relative overflow-hidden bg-slate-900/40 backdrop-blur-md border border-slate-800/50 p-5 rounded-2xl transition-all hover:bg-slate-900/60 group">
-                <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full blur-3xl opacity-20 ${isProfit ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
-                <div className="relative flex items-center justify-between">
-                    <div className="space-y-1">
-                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Total Laba/Rugi</p>
-                        <div className="flex items-baseline gap-1">
-                            <span className={`text-2xl font-black font-mono tracking-tighter ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                {isProfit ? '+' : ''}{totals.pnlCent.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                        </div>
-                        <p className={`text-[10px] font-bold font-mono ${isProfit ? 'text-emerald-500/70' : 'text-rose-500/70'}`}>
-                            Rp {Math.abs(Math.round(totals.pnlIdr)).toLocaleString('id-ID')}
-                        </p>
-                    </div>
-                    <div className={`p-3 rounded-xl ${isProfit ? 'bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20' : 'bg-rose-500/10 text-rose-500 ring-1 ring-rose-500/20'}`}>
-                        {isProfit ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
-                    </div>
+        const wins = trades.filter(t => parseFloat(t.pnlCent) > 0).length;
+        const winRate = (wins / trades.length) * 100;
+
+        return {
+            winRate: winRate.toFixed(1),
+            totalTrades: trades.length,
+            avgProfit: (totals.pnlCent / trades.length).toFixed(2)
+        };
+    }, [trades, totals.pnlCent]);
+
+    return (
+        <div className="space-y-4">
+            {/* Primary Balance */}
+            <StatCard
+                label="Saldo Sekarang"
+                value={totals.balanceCent.toLocaleString('id-ID')}
+                subValue={`≈ Rp ${Math.abs(Math.round(totals.balanceIdr)).toLocaleString('id-ID')}`}
+                icon={Layout}
+                colorClass="text-white"
+                bgColorClass="bg-blue-500/10"
+                ringColorClass="ring-blue-500/20"
+            />
+
+            <div className="grid grid-cols-1 gap-4">
+                {/* PnL Card */}
+                <StatCard
+                    label="Total Laba/Rugi"
+                    value={`${isProfit ? '+' : ''}${totals.pnlCent.toLocaleString('id-ID')}`}
+                    subValue={`Rp ${Math.abs(Math.round(totals.pnlIdr)).toLocaleString('id-ID')}`}
+                    icon={isProfit ? TrendingUp : TrendingDown}
+                    colorClass={isProfit ? 'text-emerald-400' : 'text-rose-400'}
+                    bgColorClass={isProfit ? 'bg-emerald-500/10' : 'bg-rose-500/10'}
+                    ringColorClass={isProfit ? 'ring-emerald-500/20' : 'ring-rose-500/20'}
+                />
+
+                {/* Win Rate Card */}
+                <div className="grid grid-cols-2 gap-4">
+                    <StatCard
+                        label="Win Rate"
+                        value={`${stats.winRate}%`}
+                        subValue={`${stats.totalTrades} Total Trades`}
+                        icon={Target}
+                        colorClass="text-amber-400"
+                        bgColorClass="bg-amber-500/10"
+                        ringColorClass="ring-amber-500/20"
+                    />
+                    <StatCard
+                        label="Avg. Profit"
+                        value={stats.avgProfit}
+                        icon={Activity}
+                        colorClass="text-purple-400"
+                        bgColorClass="bg-purple-500/10"
+                        ringColorClass="ring-purple-500/20"
+                    />
                 </div>
             </div>
         </div>

@@ -229,7 +229,8 @@ function App() {
 
               </div>
               <div className="lg:col-span-1 space-y-4">
-                <Dashboard totals={totals} />
+                <Dashboard totals={totals} trades={processedTrades} />
+
                 <div className="p-5 rounded-2xl border border-slate-800/50 bg-slate-900/20">
                   <p className="text-[10px] leading-relaxed text-slate-600 font-bold uppercase tracking-widest">
                     * Data sinkron dengan cloud database Cloud Supabase dan Vercel.
