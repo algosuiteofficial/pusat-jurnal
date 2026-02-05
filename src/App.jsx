@@ -155,12 +155,21 @@ function App() {
     }
 
     result.sort((a, b) => {
-      if (sortBy === 'date-desc') return new Date(b.date) - new Date(a.date);
-      if (sortBy === 'date-asc') return new Date(a.date) - new Date(b.date);
+      if (sortBy === 'date-desc') {
+        const dateDiff = new Date(b.date) - new Date(a.date);
+        if (dateDiff !== 0) return dateDiff;
+        return (b.id || 0) - (a.id || 0); // Fallback to ID desc
+      }
+      if (sortBy === 'date-asc') {
+        const dateDiff = new Date(a.date) - new Date(b.date);
+        if (dateDiff !== 0) return dateDiff;
+        return (a.id || 0) - (b.id || 0); // Fallback to ID asc
+      }
       if (sortBy === 'pnl-desc') return parseFloat(b.pnlCent) - parseFloat(a.pnlCent);
       if (sortBy === 'pnl-asc') return parseFloat(a.pnlCent) - parseFloat(b.pnlCent);
       return 0;
     });
+
 
     return result;
   }, [trades, filterRange, sortBy]);
