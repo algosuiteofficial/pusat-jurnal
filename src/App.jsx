@@ -5,8 +5,10 @@ import JournalTable from './components/JournalTable';
 import Dashboard from './components/Dashboard';
 import EquityChart from './components/EquityChart';
 import Filters from './components/Filters';
+import Pagination from './components/Pagination';
 import { supabase } from './supabaseClient';
 import { RefreshCcw } from 'lucide-react';
+
 
 const CONVERSION_RATE = 595;
 const IDR_EQUIVALENT = 100000;
@@ -15,10 +17,17 @@ function App() {
     return parseFloat(localStorage.getItem('cent_journal_initial_balance')) || 500000;
   });
   const [trades, setTrades] = useState([]);
-
   const [filterRange, setFilterRange] = useState('all');
   const [sortBy, setSortBy] = useState('date-desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Set to 10 for better visibility, user can change to 20
   const [loading, setLoading] = useState(true);
+
+  // Reset to page 1 when filters or sort change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterRange, sortBy]);
+
 
   // Fetch Initial Data
   const fetchData = async () => {
@@ -156,6 +165,13 @@ function App() {
     return result;
   }, [trades, filterRange, sortBy]);
 
+  const paginatedTrades = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return processedTrades.slice(startIndex, startIndex + itemsPerPage);
+  }, [processedTrades, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(processedTrades.length / itemsPerPage);
+
   const totals = useMemo(() => {
     const totalCentPnL = processedTrades.reduce((sum, trade) => sum + parseFloat(trade.pnlCent || 0), 0);
     const currentBalance = initialBalance + totalCentPnL;
@@ -166,6 +182,7 @@ function App() {
       balanceIdr: calculateIDR(currentBalance)
     };
   }, [processedTrades, initialBalance]);
+
 
 
 
@@ -232,8 +249,14 @@ function App() {
                 <SectionTitle title="Riwayat Perdagangan" colorClass="bg-blue-500" subtitle="Daftar lengkap transaksi Anda" />
                 <Filters filterRange={filterRange} setFilterRange={setFilterRange} sortBy={sortBy} setSortBy={setSortBy} />
               </div>
-              <JournalTable trades={processedTrades} onDeleteTrade={deleteTrade} calculateIDR={calculateIDR} />
+              <JournalTable trades={paginatedTrades} onDeleteTrade={deleteTrade} calculateIDR={calculateIDR} />
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
             </section>
+
           </>
         )}
       </div>
