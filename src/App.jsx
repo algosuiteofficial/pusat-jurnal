@@ -113,7 +113,23 @@ function App() {
   };
 
 
+  // Security Check
+  const verifyPin = () => {
+    const enteredPin = prompt('🔒 Masukkan PIN Admin untuk melanjutkan:');
+    if (!enteredPin) return false; // User cancelled
+
+    const adminPin = import.meta.env.VITE_ADMIN_PIN || '123456'; // Fallback default
+    if (enteredPin === adminPin) return true;
+
+    alert('❌ Akses Ditolak: PIN Salah!');
+    return false;
+  };
+
   const deleteTrade = async (id) => {
+    if (!verifyPin()) return;
+
+    if (!window.confirm('Apakah Anda yakin ingin menghapus data ini?')) return;
+
     try {
       if (!supabase) throw new Error('Supabase not configured');
 
@@ -142,7 +158,10 @@ function App() {
   };
 
   const handleResetData = async () => {
+    if (!verifyPin()) return;
+
     if (!window.confirm('PERINGATAN: Apakah Anda yakin ingin MERESET SEMUA data jurnal? Tindakan ini tidak dapat dibatalkan.')) {
+
       return;
     }
 
