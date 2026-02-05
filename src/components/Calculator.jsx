@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Repeat, Settings } from 'lucide-react';
+import { Repeat, Settings, RotateCcw } from 'lucide-react';
 
 const CONVERSION_RATE = 595;
 const IDR_EQUIVALENT = 100000;
 
-const Calculator = ({ initialBalance, setInitialBalance }) => {
+const Calculator = ({ initialBalance, setInitialBalance, onReset }) => {
     const [cent, setCent] = useState('');
     const [idr, setIdr] = useState('');
 
@@ -32,7 +32,7 @@ const Calculator = ({ initialBalance, setInitialBalance }) => {
     };
 
     return (
-        <div className="flex flex-wrap items-center bg-slate-900/60 backdrop-blur-sm border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+        <div className="flex flex-wrap items-center bg-slate-900/60 backdrop-blur-sm border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative group">
             {/* Dynamic Initial Balance Field */}
             <div className="px-4 py-2 flex flex-col items-start border-r border-slate-800 bg-blue-500/5">
                 <label className="text-[10px] font-black text-blue-500 tracking-widest mb-1 flex items-center gap-1 uppercase">
@@ -74,6 +74,15 @@ const Calculator = ({ initialBalance, setInitialBalance }) => {
                     />
                 </div>
             </div>
+
+            {/* Reset Button (Hidden by default, visible on hover/tap) */}
+            <button
+                onClick={onReset}
+                title="Reset Jurnal (Hapus Semua Data)"
+                className="absolute right-0 top-0 h-full w-8 bg-rose-500/10 hover:bg-rose-600 text-rose-500 hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10"
+            >
+                <RotateCcw size={16} />
+            </button>
         </div>
     );
 };

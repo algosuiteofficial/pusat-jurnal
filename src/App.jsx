@@ -141,6 +141,39 @@ function App() {
     return (cent / CONVERSION_RATE) * IDR_EQUIVALENT;
   };
 
+  const handleResetData = async () => {
+    if (!window.confirm('PERINGATAN: Apakah Anda yakin ingin MERESET SEMUA data jurnal? Tindakan ini tidak dapat dibatalkan.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      // 1. Delete from Supabase
+      if (supabase) {
+        const { error } = await supabase.from('trades').delete().neq('id', 0); // Delete all rows
+        if (error) throw error;
+      }
+
+      // 2. Clear Local Storage
+      localStorage.removeItem('cent_journal_trades');
+      // Optional: Reset Initial Balance too? Let's keep it or ask user. 
+      // User said "fitur reset", usually means clear journal. Let's keep balance for convenience or reset it?
+      // Let's just clear trades for now as that's the main "journal" data.
+
+      // 3. Update State
+      setTrades([]);
+      // setInitialBalance(500000); // Uncomment if we want to reset balance too
+
+      alert('Data jurnal berhasil di-reset.');
+    } catch (error) {
+      console.error('Reset failed:', error);
+      alert('Gagal me-reset data: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   const processedTrades = useMemo(() => {
     let result = [...trades];
     const now = new Date();
@@ -219,8 +252,11 @@ function App() {
               JURNAL<span className="text-emerald-500 font-light ml-1">CENT</span>
             </h1>
             <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">Pelacak Perdagangan Premium</p>
+            <section className="col-span-1 md:col-span-3">
+              <Calculator initialBalance={initialBalance} setInitialBalance={setInitialBalance} onReset={handleResetData} />
+            </section>
           </div>
-          <Calculator initialBalance={initialBalance} setInitialBalance={setInitialBalance} />
+
         </header>
 
         {loading ? (
