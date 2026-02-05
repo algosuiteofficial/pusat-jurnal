@@ -11,14 +11,20 @@ import {
 
 const EquityChart = ({ trades, initialBalance = 0 }) => {
     const chartData = useMemo(() => {
-        const sorted = [...trades].sort((a, b) => new Date(a.date) - new Date(b.date));
+        // 1. Sort precisely: Date first, then ID (arrival order)
+        const sorted = [...trades].sort((a, b) => {
+            const dateDiff = new Date(a.date) - new Date(b.date);
+            if (dateDiff !== 0) return dateDiff;
+            // Fallback to ID (BIGINT from Supabase or Date.now() from LocalStorage)
+            return (a.id || 0) - (b.id || 0);
+        });
 
         let cumulative = parseFloat(initialBalance);
 
         // Add starting point
         const data = [{
             name: 'Start',
-            pnl: cumulative,
+            pnl: parseFloat(cumulative.toFixed(2)),
             tradePnl: 0
         }];
 
@@ -27,18 +33,17 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
             data.push({
                 name: new Date(trade.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
                 pnl: parseFloat(cumulative.toFixed(2)),
-                tradePnl: trade.pnlCent
+                tradePnl: parseFloat(parseFloat(trade.pnlCent || 0).toFixed(2))
             });
         });
 
         return data;
     }, [trades, initialBalance]);
 
-
-    if (trades.length < 2) {
+    if (trades.length < 1) {
         return (
-            <div className="h-[300px] flex items-center justify-center bg-slate-900/50 rounded-2xl border border-slate-800 border-dashed text-slate-500 italic">
-                Add at least 2 trades to see the Equity Curve
+            <div className="h-[300px] flex items-center justify-center bg-slate-900/50 rounded-2xl border border-slate-800 border-dashed text-slate-500 italic text-xs uppercase tracking-widest font-bold">
+                Masukkan transaksi untuk melihat kurva ekuitas
             </div>
         );
     }
