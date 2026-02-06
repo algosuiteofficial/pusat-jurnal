@@ -6,8 +6,9 @@ import Dashboard from './components/Dashboard';
 import EquityChart from './components/EquityChart';
 import Filters from './components/Filters';
 import Pagination from './components/Pagination';
+import MonthlyProgress from './components/MonthlyProgress';
 import { supabase } from './supabaseClient';
-import { RefreshCcw } from 'lucide-react';
+import { RefreshCcw, Cloud, CloudOff, AlertCircle, LucideLayout } from 'lucide-react';
 
 
 const CONVERSION_RATE = 595;
@@ -22,6 +23,10 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Set to 10 for better visibility, user can change to 20
   const [loading, setLoading] = useState(true);
+  const [syncStatus, setSyncStatus] = useState('cloud'); // 'cloud' | 'local' | 'error'
+  const [monthlyTarget, setMonthlyTarget] = useState(() => {
+    return parseFloat(localStorage.getItem('cent_journal_monthly_target')) || 10000;
+  });
 
   // Reset to page 1 when filters or sort change
   useEffect(() => {
@@ -33,23 +38,45 @@ function App() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      if (!supabase) throw new Error('Supabase not configured');
+      if (!supabase) {
+        setSyncStatus('local');
+        throw new Error('Supabase not configured');
+      }
 
       // 1. Fetch Trades
       const tradesRes = await supabase.from('trades').select('*').order('date', { ascending: false });
       if (tradesRes.error) throw tradesRes.error;
+
       const formattedTrades = tradesRes.data.map(t => ({ ...t, pnlCent: t.pnl_cent }));
       setTrades(formattedTrades);
+
+      // Update local storage as a fresh backup
+      localStorage.setItem('cent_journal_trades', JSON.stringify(formattedTrades));
 
       // 2. Fetch Initial Balance from settings
       const settingsRes = await supabase.from('settings').select('value').eq('key', 'initial_balance').single();
       if (settingsRes.data) {
-        setInitialBalance(parseFloat(settingsRes.data.value));
+        const balance = parseFloat(settingsRes.data.value);
+        setInitialBalance(balance);
+        localStorage.setItem('cent_journal_initial_balance', balance);
       }
+
+      // 3. Fetch Monthly Target
+      const targetRes = await supabase.from('settings').select('value').eq('key', 'monthly_target').single();
+      if (targetRes.data) {
+        const target = parseFloat(targetRes.data.value);
+        setMonthlyTarget(target);
+        localStorage.setItem('cent_journal_monthly_target', target);
+      }
+
+      setSyncStatus('cloud');
     } catch (error) {
       console.warn('Sync failed, using localStorage:', error.message);
+      setSyncStatus('local');
+
       const savedTrades = localStorage.getItem('cent_journal_trades');
       if (savedTrades) setTrades(JSON.parse(savedTrades));
+
       const savedBalance = localStorage.getItem('cent_journal_initial_balance');
       if (savedBalance) setInitialBalance(parseFloat(savedBalance));
     } finally {
@@ -61,19 +88,23 @@ function App() {
     fetchData();
   }, []);
 
-  // Sync Initial Balance to DB (Debounced)
+  // Sync Settings to DB (Debounced)
   useEffect(() => {
     localStorage.setItem('cent_journal_initial_balance', initialBalance);
+    localStorage.setItem('cent_journal_monthly_target', monthlyTarget);
 
-    const syncBalance = async () => {
+    const syncSettings = async () => {
       if (supabase) {
-        await supabase.from('settings').upsert({ key: 'initial_balance', value: initialBalance.toString() });
+        await supabase.from('settings').upsert([
+          { key: 'initial_balance', value: initialBalance.toString() },
+          { key: 'monthly_target', value: monthlyTarget.toString() }
+        ]);
       }
     };
 
-    const timeoutId = setTimeout(syncBalance, 1000);
+    const timeoutId = setTimeout(syncSettings, 1000);
     return () => clearTimeout(timeoutId);
-  }, [initialBalance]);
+  }, [initialBalance, monthlyTarget]);
 
 
 
@@ -98,17 +129,19 @@ function App() {
       if (error) throw error;
 
       const newTrade = { ...data[0], pnlCent: data[0].pnl_cent };
-      setTrades([newTrade, ...trades]);
-
-      // Secondary backup to localStorage
-      localStorage.setItem('cent_journal_trades', JSON.stringify([newTrade, ...trades]));
+      setTrades(prev => {
+        const updated = [newTrade, ...prev];
+        localStorage.setItem('cent_journal_trades', JSON.stringify(updated));
+        return updated;
+      });
     } catch (error) {
       console.warn('Saving to Local Storage only:', error.message);
-      // Fallback: local only if DB fails
       const localTrade = { ...trade, id: Date.now() };
-      const updated = [localTrade, ...trades];
-      setTrades(updated);
-      localStorage.setItem('cent_journal_trades', JSON.stringify(updated));
+      setTrades(prev => {
+        const updated = [localTrade, ...prev];
+        localStorage.setItem('cent_journal_trades', JSON.stringify(updated));
+        return updated;
+      });
     }
   };
 
@@ -140,15 +173,18 @@ function App() {
 
       if (error) throw error;
 
-      const updated = trades.filter(trade => trade.id !== id);
-      setTrades(updated);
-      localStorage.setItem('cent_journal_trades', JSON.stringify(updated));
+      setTrades(prev => {
+        const updated = prev.filter(trade => trade.id !== id);
+        localStorage.setItem('cent_journal_trades', JSON.stringify(updated));
+        return updated;
+      });
     } catch (error) {
       console.warn('Deleting from Local Storage:', error.message);
-      // If it's a numeric ID (local), just filter it
-      const updated = trades.filter(trade => trade.id !== id);
-      setTrades(updated);
-      localStorage.setItem('cent_journal_trades', JSON.stringify(updated));
+      setTrades(prev => {
+        const updated = prev.filter(trade => trade.id !== id);
+        localStorage.setItem('cent_journal_trades', JSON.stringify(updated));
+        return updated;
+      });
     }
   };
 
@@ -244,6 +280,14 @@ function App() {
     };
   }, [processedTrades, initialBalance]);
 
+  const currentMonthPnl = useMemo(() => {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    return trades
+      .filter(t => new Date(t.date) >= startOfMonth)
+      .reduce((sum, trade) => sum + parseFloat(trade.pnlCent || 0), 0);
+  }, [trades]);
+
 
 
 
@@ -264,18 +308,69 @@ function App() {
         <div className="absolute bottom-0 -right-20 w-96 h-96 bg-emerald-600/5 rounded-full blur-[120px]"></div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 py-8 md:py-12 space-y-10">
-        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-8 border-b border-slate-900">
-          <div className="space-y-1">
-            <h1 className="text-4xl font-black tracking-tighter text-white">
-              JURNAL<span className="text-emerald-500 font-light ml-1">CENT</span>
-            </h1>
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">Pelacak Perdagangan Premium</p>
-            <section className="col-span-1 md:col-span-3">
+      <div className="relative max-w-7xl mx-auto px-4 py-8 md:py-12 space-y-12">
+        <header className="relative space-y-8">
+          {/* Header Background Glow */}
+          <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-blue-600/5 blur-[100px] -z-10 rounded-full"></div>
+
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-8 border-b border-slate-900/50">
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-5xl font-black tracking-[ -0.05em] text-white">
+                    JURNAL<span className="text-emerald-500 font-light ml-1">CENT</span>
+                  </h1>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/50 border border-slate-800 backdrop-blur-md">
+                    {syncStatus === 'cloud' && (
+                      <>
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse"></div>
+                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1.5">
+                          <Cloud size={10} /> Cloud Synced
+                        </span>
+                      </>
+                    )}
+                    {syncStatus === 'local' && (
+                      <>
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></div>
+                        <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
+                          <CloudOff size={10} /> Local Mode
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] ml-1">Premium Trading Terminal v2.0</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-4 lg:items-center">
               <Calculator initialBalance={initialBalance} setInitialBalance={setInitialBalance} onReset={handleResetData} />
-            </section>
+            </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2">
+              <MonthlyProgress
+                currentMonthPnl={currentMonthPnl}
+                target={monthlyTarget}
+                onUpdateTarget={setMonthlyTarget}
+              />
+            </div>
+            <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/50 p-6 rounded-3xl shadow-xl flex flex-col justify-center">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <LucideLayout size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase tracking-tight">Status Terminal</h3>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Active Session</p>
+                </div>
+              </div>
+              <div className="mt-2 py-2 px-4 bg-slate-950/50 rounded-xl border border-slate-800 inline-block font-mono text-[10px] text-slate-400">
+                REF_ID: {new Date().getTime().toString(36).toUpperCase()}
+              </div>
+            </div>
+          </div>
         </header>
 
         {loading ? (
