@@ -230,9 +230,9 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
             <div className={`absolute inset-0 blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-1000 -z-10 ${chartData[chartData.length - 1]?.pnl >= initialBalance ? 'bg-emerald-500/5' : 'bg-rose-500/5'
                 }`}></div>
 
-            <div className="h-[300px] md:h-[350px] w-full mt-12 md:mt-8 -ml-6 md:-ml-4">
+            <div className="h-[350px] md:h-[400px] w-full mt-12 md:mt-8 -ml-4 md:-ml-4">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
+                    <AreaChart data={chartData} margin={{ top: 20, right: 10, left: -10, bottom: 0 }}>
                         <defs>
                             <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset={0} stopColor="#10b981" stopOpacity={0.4} /> {/* Emerald Top */}
@@ -253,7 +253,7 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
                         <XAxis
                             dataKey="name"
                             stroke="#94a3b8"
-                            fontSize={9}
+                            fontSize={8}
                             tickLine={false}
                             axisLine={false}
                             dy={10}
@@ -262,13 +262,13 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
                         />
                         <YAxis
                             stroke="#94a3b8"
-                            fontSize={9}
+                            fontSize={8}
                             tickLine={false}
                             axisLine={false}
                             tickFormatter={(value) => value.toLocaleString('id-ID')}
                             fontFamily="monospace"
                             domain={[minPnl - buffer, maxPnl + buffer]}
-                            width={50}
+                            width={40}
                         />
 
                         <Tooltip

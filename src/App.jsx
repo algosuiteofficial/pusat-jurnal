@@ -337,13 +337,13 @@ function App() {
             <div className="space-y-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
-                  <h1 className="text-6xl font-black tracking-[-0.08em] text-slate-900 border-b-4 border-blue-500/20 pb-1">
+                  <h1 className="text-4xl md:text-6xl font-black tracking-[-0.08em] text-slate-900 border-b-4 border-blue-500/20 pb-1">
                     JURNAL<span className="text-blue-500 font-light ml-1">CENT</span>
                   </h1>
                 </div>
-                <div className="flex items-center gap-4 mt-4">
-                  <p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.4em]">Professional Terminal v2.1</p>
-                  <div className="h-px w-8 bg-slate-200"></div>
+                <div className="flex flex-wrap items-center gap-2 md:gap-4 mt-3 md:mt-4">
+                  <p className="text-slate-400 text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em]">Professional Terminal v2.1</p>
+                  <div className="h-px w-6 md:w-8 bg-slate-200"></div>
                   <div className="flex items-center gap-2">
                     {syncStatus === 'cloud' ? (
                       <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1">
