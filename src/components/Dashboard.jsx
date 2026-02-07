@@ -1,30 +1,42 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, Layout, Target, Activity, Wallet } from 'lucide-react';
 
-const StatCard = ({ label, value, subValue, icon: Icon, colorClass, bgColorClass, ringColorClass }) => (
-    <div className="relative overflow-hidden bg-slate-900/60 backdrop-blur-xl border border-slate-800/60 p-4 md:p-5 rounded-2xl transition-all hover:bg-slate-900/80 group shadow-lg">
-        {/* Removed the large blur blob as it was causing visual clutter */}
-        <div className="flex flex-col justify-between h-full">
-            <div className="flex items-start justify-between mb-1.5 md:mb-2">
-                <p className="text-slate-500 text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em]">{label}</p>
-                <div className={`p-1.5 md:p-2 rounded-lg ${bgColorClass} ${colorClass} ring-1 ${ringColorClass} bg-opacity-50`}>
-                    <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={2.5} />
+const StatCard = ({ label, value, subValue, icon: Icon, colorClass, gradientClass, glowClass }) => (
+    <div className={`glass-card p-5 md:p-6 rounded-3xl group hover:scale-[1.02] transition-all duration-300 relative overflow-hidden ${gradientClass}`}>
+        {/* Background Glow Effect */}
+        <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${glowClass} blur-3xl -z-10`}></div>
+
+        {/* Shimmer Effect on Hover */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+            <div className="absolute top-0 -left-full h-full w-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12 group-hover:animate-[shimmer_1.5s_ease-in-out]"></div>
+        </div>
+
+        <div className="flex flex-col justify-between h-full relative z-10">
+            <div className="flex items-start justify-between mb-4">
+                <p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.25em] opacity-70">{label}</p>
+
+                {/* Enhanced Icon with Circle Background */}
+                <div className={`p-2.5 rounded-xl ${colorClass.replace('text-', 'bg-')}/10 border border-${colorClass.split('-')[1]}-500/20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300`}>
+                    <Icon className={`w-4 h-4 ${colorClass}`} strokeWidth={2} />
                 </div>
             </div>
 
-            <div className="space-y-0.5">
+            <div className="space-y-1">
                 <div className="flex items-baseline gap-1">
-                    <span className={`text-xl md:text-2xl font-black font-mono tracking-tighter ${colorClass}`}>
+                    <span className="text-3xl md:text-4xl font-black font-mono tracking-tighter text-slate-800 group-hover:text-slate-900 transition-colors">
                         {value || '0'}
                     </span>
                 </div>
                 {subValue && (
-                    <p className="text-slate-600 text-[8px] md:text-[9px] font-bold font-mono uppercase tracking-widest truncate">
+                    <p className="text-slate-500 text-[11px] font-bold font-mono tracking-wide truncate">
                         {subValue}
                     </p>
                 )}
             </div>
         </div>
+
+        {/* Bottom Border Accent */}
+        <div className={`absolute bottom-0 left-0 right-0 h-1 ${colorClass.replace('text-', 'bg-')} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
     </div>
 );
 
@@ -54,9 +66,9 @@ const Dashboard = ({ totals, trades = [] }) => {
                 value={(totals?.balanceCent || 0).toLocaleString('id-ID')}
                 subValue={`≈ Rp ${Math.abs(Math.round(totals?.balanceIdr || 0)).toLocaleString('id-ID')}`}
                 icon={Wallet}
-                colorClass="text-blue-400"
-                bgColorClass="bg-blue-500/10"
-                ringColorClass="ring-blue-500/20"
+                colorClass="text-blue-500"
+                gradientClass="bg-gradient-to-br from-blue-50/50 to-transparent"
+                glowClass="bg-blue-500/20"
             />
 
             <div className="grid grid-cols-1 gap-4">
@@ -66,9 +78,9 @@ const Dashboard = ({ totals, trades = [] }) => {
                     value={`${isProfit ? '+' : ''}${(totals?.pnlCent || 0).toLocaleString('id-ID')}`}
                     subValue={`Rp ${Math.abs(Math.round(totals?.pnlIdr || 0)).toLocaleString('id-ID')}`}
                     icon={isProfit ? TrendingUp : TrendingDown}
-                    colorClass={isProfit ? 'text-emerald-400' : 'text-rose-400'}
-                    bgColorClass={isProfit ? 'bg-emerald-500/10' : 'bg-rose-500/10'}
-                    ringColorClass={isProfit ? 'ring-emerald-500/20' : 'ring-rose-500/20'}
+                    colorClass={isProfit ? 'text-emerald-500' : 'text-rose-500'}
+                    gradientClass={isProfit ? 'bg-gradient-to-br from-emerald-50/50 to-transparent' : 'bg-gradient-to-br from-rose-50/50 to-transparent'}
+                    glowClass={isProfit ? 'bg-emerald-500/20' : 'bg-rose-500/20'}
                 />
 
                 {/* Win Rate Card */}
@@ -78,17 +90,18 @@ const Dashboard = ({ totals, trades = [] }) => {
                         value={`${stats.winRate}%`}
                         subValue={`${stats.totalTrades} Trade`}
                         icon={Target}
-                        colorClass="text-amber-400"
-                        bgColorClass="bg-amber-500/10"
-                        ringColorClass="ring-amber-500/20"
+                        colorClass="text-amber-500"
+                        gradientClass="bg-gradient-to-br from-amber-50/50 to-transparent"
+                        glowClass="bg-amber-500/20"
                     />
                     <StatCard
-                        label="Rata-rata Profit"
+                        label="Avg Profit"
                         value={stats.avgProfit}
+                        subValue="per trade"
                         icon={Activity}
-                        colorClass="text-purple-400"
-                        bgColorClass="bg-purple-500/10"
-                        ringColorClass="ring-purple-500/20"
+                        colorClass="text-purple-500"
+                        gradientClass="bg-gradient-to-br from-purple-50/50 to-transparent"
+                        glowClass="bg-purple-500/20"
                     />
                 </div>
             </div>

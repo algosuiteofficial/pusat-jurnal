@@ -32,45 +32,41 @@ const Calculator = ({ initialBalance, setInitialBalance, onReset }) => {
     };
 
     return (
-        <div className="flex flex-wrap items-center bg-slate-900/60 backdrop-blur-sm border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative group">
+        <div className="flex flex-wrap items-center glass-card rounded-2xl group border-none shadow-none">
             {/* Dynamic Initial Balance Field */}
-            <div className="px-4 py-2 flex flex-col items-start border-r border-slate-800 bg-blue-500/5">
-                <label className="text-[10px] font-black text-blue-500 tracking-widest mb-1 flex items-center gap-1 uppercase">
-                    <Settings size={10} /> Modal Awal (Cent)
+            <div className="px-6 py-3 flex flex-col items-start border-r border-white/10 bg-blue-500/5">
+                <label className="text-[9px] font-black text-blue-500 tracking-widest mb-1 uppercase">
+                    Modal Awal (Cent)
                 </label>
                 <input
                     type="number"
                     value={initialBalance}
                     onChange={(e) => setInitialBalance(parseFloat(e.target.value) || 0)}
-                    className="bg-transparent text-blue-400 font-mono text-lg focus:outline-none w-24 md:w-32"
+                    className="bg-transparent text-slate-800 font-mono text-lg focus:outline-none w-24 md:w-32 font-black"
                 />
             </div>
 
-            <div className="px-4 py-2 flex flex-col items-start border-r border-slate-800">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Konversi Cent</label>
+            <div className="px-6 py-3 flex flex-col items-start border-r border-white/10">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Konversi</label>
                 <input
                     type="number"
                     value={cent}
                     onChange={handleCentChange}
                     placeholder="0.00"
-                    className="bg-transparent text-slate-200 font-mono text-lg focus:outline-none w-20 md:w-28 placeholder:text-slate-700"
+                    className="bg-transparent text-slate-800 font-mono text-lg focus:outline-none w-24 md:w-28 placeholder:text-slate-300 font-black"
                 />
             </div>
 
-            <div className="bg-slate-800/50 p-3 text-slate-500 hidden md:block">
-                <Repeat size={18} />
-            </div>
-
-            <div className="px-4 py-2 flex flex-col items-start">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Estimasi IDR</label>
+            <div className="px-6 py-3 flex flex-col items-start">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Estimasi IDR</label>
                 <div className="flex items-center">
-                    <span className="text-slate-600 text-xs font-bold mr-1">Rp</span>
+                    <span className="text-slate-300 text-xs font-bold mr-1">Rp</span>
                     <input
                         type="text"
                         value={idr}
                         onChange={handleIdrChange}
                         placeholder="0"
-                        className="bg-transparent text-slate-200 font-mono text-lg focus:outline-none w-24 md:w-32 placeholder:text-slate-700"
+                        className="bg-transparent text-slate-800 font-mono text-lg focus:outline-none w-28 md:w-36 placeholder:text-slate-300 font-black"
                     />
                 </div>
             </div>

@@ -5,8 +5,8 @@ const Filters = ({ filterRange, setFilterRange, sortBy, setSortBy }) => {
     return (
         <div className="flex flex-wrap items-center gap-4 md:gap-6">
             <div className="flex items-center gap-2 md:gap-3 max-w-full overflow-hidden">
-                <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest hidden sm:block">Jangkauan:</span>
-                <div className="flex bg-slate-950/50 p-1 rounded-xl border border-slate-800 overflow-x-auto no-scrollbar">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden sm:block">Jangkauan:</span>
+                <div className="flex bg-slate-100/50 p-1 rounded-xl border border-slate-200/50 overflow-x-auto no-scrollbar">
                     {[
                         { id: 'all', label: 'Semua' },
                         { id: 'week', label: 'Pekan' },
@@ -27,7 +27,7 @@ const Filters = ({ filterRange, setFilterRange, sortBy, setSortBy }) => {
             </div>
 
             <div className="flex items-center gap-3">
-                <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Urutan:</span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Urutan:</span>
                 <div className="relative">
                     <select
                         value={sortBy}

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
     AreaChart,
     Area,
@@ -7,9 +7,10 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    ReferenceLine
+    ReferenceLine,
+    ReferenceArea
 } from 'recharts';
-import { Maximize2, Filter, TrendingUp, Calendar } from 'lucide-react';
+import { Maximize2, Filter, TrendingUp, Calendar, Download } from 'lucide-react';
 
 const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -17,35 +18,38 @@ const CustomTooltip = ({ active, payload }) => {
         const isProfit = data.tradePnl >= 0;
 
         return (
-            <div className="bg-slate-900/90 border border-slate-700/50 p-4 rounded-xl shadow-2xl backdrop-blur-md min-w-[200px]">
-                <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-700/50">
-                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">
+            <div className="bg-white/10 border border-white/20 p-5 rounded-3xl shadow-2xl backdrop-blur-2xl min-w-[220px]">
+                <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/10">
+                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.3em] opacity-60">
                         {data.fullDate}
                     </p>
                     {data.tradePnl !== 0 && (
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isProfit ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                        <span className={`text-[9px] px-2 py-0.5 rounded-md font-black ${isProfit ? 'text-emerald-500 bg-emerald-500/5' : 'text-rose-500 bg-rose-500/5'}`}>
                             {isProfit ? 'WIN' : 'LOSS'}
                         </span>
                     )}
                 </div>
-                <div className="space-y-3">
-                    <div className="flex justify-between gap-8 items-center group">
-                        <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider group-hover:text-blue-400 transition-colors">Saldo Akun</span>
-                        <span className="text-white font-mono font-bold text-sm">
-                            {data.pnl.toLocaleString('id-ID')} <span className="text-[9px] text-slate-600 font-normal">c</span>
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <span className="text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Equity</span>
+                        <span className="text-slate-800 font-mono font-black text-base tracking-tighter">
+                            {data.pnl.toLocaleString('id-ID')} <span className="text-[9px] text-slate-400 opacity-60">c</span>
                         </span>
                     </div>
-                    <div className="flex justify-between gap-8 items-center group">
-                        <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider group-hover:text-slate-300 transition-colors">PnL Trade</span>
-                        <div className="flex items-center gap-2">
-                            {data.tradePnl !== 0 && (
-                                <div className={`w-1.5 h-1.5 rounded-full ${isProfit ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
-                            )}
-                            <span className={`font-mono font-bold text-sm ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                {isProfit ? '+' : ''}{data.tradePnl.toLocaleString('id-ID')}
+                    <div className="flex justify-between items-center">
+                        <span className="text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Delta</span>
+                        <span className={`font-mono font-black text-base tracking-tighter ${isProfit ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            {isProfit ? '+' : ''}{data.tradePnl.toLocaleString('id-ID')}
+                        </span>
+                    </div>
+                    {data.drawdown !== undefined && data.drawdown > 0 && (
+                        <div className="flex justify-between items-center pt-2 border-t border-white/10">
+                            <span className="text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Drawdown</span>
+                            <span className="font-mono font-black text-sm tracking-tighter text-amber-500">
+                                -{data.drawdown.toLocaleString('id-ID')}
                             </span>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
         );
@@ -55,6 +59,27 @@ const CustomTooltip = ({ active, payload }) => {
 
 const EquityChart = ({ trades, initialBalance = 0 }) => {
     const [timeframe, setTimeframe] = useState('ALL'); // ALL, 1M, 1W
+    const chartRef = useRef(null);
+
+    const exportChart = () => {
+        // Use html2canvas to export the chart
+        import('html2canvas').then((html2canvas) => {
+            const chartElement = chartRef.current;
+            if (chartElement) {
+                html2canvas.default(chartElement, {
+                    backgroundColor: '#ffffff',
+                    scale: 2
+                }).then((canvas) => {
+                    const link = document.createElement('a');
+                    link.download = `equity-chart-${new Date().toISOString().split('T')[0]}.png`;
+                    link.href = canvas.toDataURL();
+                    link.click();
+                });
+            }
+        }).catch(() => {
+            alert('Export gagal. Silakan coba lagi.');
+        });
+    };
 
     const chartData = useMemo(() => {
         if (!trades || trades.length === 0) {
@@ -64,7 +89,8 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
                 name: 'START',
                 fullDate: 'Saldo Awal',
                 pnl: parseFloat(initialBalance || 0),
-                tradePnl: 0
+                tradePnl: 0,
+                drawdown: 0
             }];
         }
 
@@ -77,8 +103,9 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
             return (a.id || 0) - (b.id || 0);
         });
 
-        // 2. Build Cumulative Data
+        // 2. Build Cumulative Data with Drawdown Tracking
         let cumulative = parseFloat(initialBalance || 0);
+        let highWaterMark = cumulative;
         let lastDate = '';
 
         const fullData = [{
@@ -87,7 +114,8 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
             name: 'START',
             fullDate: 'Saldo Awal',
             pnl: parseFloat(cumulative.toFixed(2)),
-            tradePnl: 0
+            tradePnl: 0,
+            drawdown: 0
         }];
 
         // Adjust start date to be slightly before first trade
@@ -99,6 +127,15 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
 
         sorted.forEach((trade, idx) => {
             cumulative += parseFloat(trade.pnlCent || 0);
+
+            // Update high water mark
+            if (cumulative > highWaterMark) {
+                highWaterMark = cumulative;
+            }
+
+            // Calculate drawdown from high water mark
+            const drawdown = Math.max(0, highWaterMark - cumulative);
+
             const outputDate = new Date(trade.date || Date.now());
             const dateStr = outputDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
 
@@ -108,7 +145,8 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
                 name: dateStr === lastDate ? '' : dateStr,
                 fullDate: outputDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' }) + ` (#${idx + 1})`,
                 pnl: parseFloat(cumulative.toFixed(2)),
-                tradePnl: parseFloat(parseFloat(trade.pnlCent || 0).toFixed(2))
+                tradePnl: parseFloat(parseFloat(trade.pnlCent || 0).toFixed(2)),
+                drawdown: parseFloat(drawdown.toFixed(2))
             });
             lastDate = dateStr;
         });
@@ -163,17 +201,25 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
     const off = gradientOffset();
 
     return (
-        <div className="relative group">
+        <div className="relative group" ref={chartRef}>
             {/* Header Controls */}
-            <div className="absolute top-0 right-0 z-10 flex gap-1 p-2">
+            <div className="absolute top-0 right-0 z-10 flex gap-2 p-4">
+                <button
+                    onClick={exportChart}
+                    className="text-[9px] font-black px-4 py-2 rounded-xl transition-all border bg-white/5 text-slate-400 border-white/10 hover:text-slate-800 hover:bg-white/10 uppercase tracking-[0.2em] flex items-center gap-2"
+                    title="Export Chart"
+                >
+                    <Download size={12} />
+                    Export
+                </button>
                 {['1W', '1M', 'ALL'].map((tf) => (
                     <button
                         key={tf}
                         onClick={() => setTimeframe(tf)}
-                        className={`text-[9px] font-bold px-3 py-1.5 rounded-lg transition-all border ${timeframe === tf
-                            ? 'bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-500/20'
-                            : 'bg-slate-900/50 text-slate-500 border-slate-800 hover:text-slate-300 hover:bg-slate-800'
-                            }`}
+                        className={`text-[9px] font-black px-4 py-2 rounded-xl transition-all border ${timeframe === tf
+                            ? 'bg-blue-500 text-white border-blue-500 shadow-xl shadow-blue-500/10'
+                            : 'bg-white/5 text-slate-400 border-white/10 hover:text-slate-800 hover:bg-white/10'
+                            } uppercase tracking-[0.2em]`}
                     >
                         {tf}
                     </button>
@@ -202,11 +248,11 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
                             </linearGradient>
                         </defs>
 
-                        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} opacity={0.3} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" vertical={false} opacity={0.3} />
 
                         <XAxis
                             dataKey="name"
-                            stroke="#64748b"
+                            stroke="#94a3b8"
                             fontSize={9}
                             tickLine={false}
                             axisLine={false}
@@ -215,7 +261,7 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
                             interval="preserveStartEnd"
                         />
                         <YAxis
-                            stroke="#64748b"
+                            stroke="#94a3b8"
                             fontSize={9}
                             tickLine={false}
                             axisLine={false}
@@ -227,16 +273,16 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
 
                         <Tooltip
                             content={<CustomTooltip />}
-                            cursor={{ stroke: '#94a3b8', strokeWidth: 1, strokeDasharray: '4 4' }}
+                            cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
                         />
 
                         {/* Break Even Line */}
                         <ReferenceLine
                             y={initialBalance}
-                            stroke="#64748b"
+                            stroke="#94a3b8"
                             strokeDasharray="3 3"
                             opacity={0.5}
-                            label={{ position: 'insideTopRight', value: 'BEP', fill: '#64748b', fontSize: 9, fontWeight: 'bold' }}
+                            label={{ position: 'insideTopRight', value: 'BEP', fill: '#94a3b8', fontSize: 9, fontWeight: 'bold' }}
                         />
 
                         {/* High Water Mark (Only show if significant profit) */}
@@ -257,7 +303,7 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
                             strokeWidth={3}
                             fill="url(#splitColor)"
                             animationDuration={1500}
-                            activeDot={{ r: 6, strokeWidth: 0, fill: '#fff' }}
+                            activeDot={{ r: 6, strokeWidth: 0, fill: '#3b82f6' }}
                         />
                     </AreaChart>
                 </ResponsiveContainer>

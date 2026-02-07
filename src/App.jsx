@@ -320,55 +320,42 @@ function App() {
 
 
 
-  const SectionTitle = ({ title, colorClass, subtitle }) => (
-    <div className="mb-6">
-      <div className="flex items-center gap-3">
-        <span className={`w-1.5 h-6 rounded-full ${colorClass}`}></span>
-        <h2 className="text-xl font-black text-slate-100 uppercase tracking-tighter">{title}</h2>
-      </div>
-      {subtitle && <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1 ml-4.5">{subtitle}</p>}
+  const SectionTitle = ({ title, subtitle }) => (
+    <div className="mb-8">
+      <h2 className="text-2xl font-black text-slate-800 tracking-tighter uppercase">{title}</h2>
+      {subtitle && <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em] mt-1 opacity-60">{subtitle}</p>}
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#050810] text-slate-300 font-sans selection:bg-blue-500/30 overflow-x-hidden w-full">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 -left-20 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-0 -right-20 w-96 h-96 bg-emerald-600/5 rounded-full blur-[120px]"></div>
-      </div>
+    <div className="min-h-screen selection:bg-blue-500/30 overflow-x-hidden w-full transition-colors duration-500">
+      {/* Background is handled in index.css body */}
 
       <div className="relative max-w-7xl mx-auto px-4 py-8 md:py-12 space-y-12">
         <header className="relative space-y-8">
-          {/* Header Background Glow */}
-          <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-blue-600/5 blur-[100px] -z-10 rounded-full"></div>
-
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-8 border-b border-slate-900/50">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-8 border-b border-slate-200/50">
             <div className="space-y-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
-                  <h1 className="text-5xl font-black tracking-[ -0.05em] text-white">
-                    JURNAL<span className="text-emerald-500 font-light ml-1">CENT</span>
+                  <h1 className="text-6xl font-black tracking-[-0.08em] text-slate-900 border-b-4 border-blue-500/20 pb-1">
+                    JURNAL<span className="text-blue-500 font-light ml-1">CENT</span>
                   </h1>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/50 border border-slate-800 backdrop-blur-md">
-                    {syncStatus === 'cloud' && (
-                      <>
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse"></div>
-                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1.5">
-                          <Cloud size={10} /> Cloud Synced
-                        </span>
-                      </>
-                    )}
-                    {syncStatus === 'local' && (
-                      <>
-                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></div>
-                        <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
-                          <CloudOff size={10} /> Local Mode
-                        </span>
-                      </>
+                </div>
+                <div className="flex items-center gap-4 mt-4">
+                  <p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.4em]">Professional Terminal v2.1</p>
+                  <div className="h-px w-8 bg-slate-200"></div>
+                  <div className="flex items-center gap-2">
+                    {syncStatus === 'cloud' ? (
+                      <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1">
+                        <Cloud size={10} /> Online
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest flex items-center gap-1">
+                        <CloudOff size={10} /> Offline
+                      </span>
                     )}
                   </div>
                 </div>
-                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] ml-1">Premium Trading Terminal v2.0</p>
               </div>
             </div>
 
@@ -377,65 +364,48 @@ function App() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2">
-              <MonthlyProgress
-                currentMonthPnl={currentMonthPnl}
-                target={monthlyTarget}
-                onUpdateTarget={setMonthlyTarget}
-              />
-            </div>
-            <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/50 p-6 rounded-3xl shadow-xl flex flex-col justify-center">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  <LucideLayout size={20} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-white uppercase tracking-tight">Status Terminal</h3>
-                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Active Session</p>
-                </div>
-              </div>
-              <div className="mt-2 py-2 px-4 bg-slate-950/50 rounded-xl border border-slate-800 inline-block font-mono text-[10px] text-slate-400">
-                REF_ID: {new Date().getTime().toString(36).toUpperCase()}
-              </div>
-            </div>
+          <div className="md:col-span-3">
+            <MonthlyProgress
+              currentMonthPnl={currentMonthPnl}
+              target={monthlyTarget}
+              onUpdateTarget={setMonthlyTarget}
+              trades={trades}
+            />
           </div>
         </header>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-500 animate-pulse">
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400 animate-pulse">
             <RefreshCcw size={40} className="animate-spin mb-4 text-blue-500" />
             <p className="text-xs font-bold uppercase tracking-widest">Sinkronisasi Data Supabase...</p>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              <div className="lg:col-span-3 bg-slate-900/40 backdrop-blur-md border border-slate-800/50 p-6 md:p-8 rounded-[2rem] shadow-2xl">
-                <SectionTitle title="Kurva Ekuitas" colorClass="bg-blue-500" subtitle="Pertumbuhan Saldo Real-time" />
+              <div className="lg:col-span-3 glass-card p-6 md:p-8 rounded-[2rem]">
+                <SectionTitle title="Kurva Ekuitas" subtitle="Pertumbuhan Saldo Real-time" />
                 <EquityChart trades={processedTrades} initialBalance={initialBalance} />
-
-
               </div>
               <div className="lg:col-span-1 space-y-4">
                 <Dashboard totals={totals} trades={processedTrades} />
 
-                <div className="p-5 rounded-2xl border border-slate-800/50 bg-slate-900/20">
-                  <p className="text-[10px] leading-relaxed text-slate-600 font-bold uppercase tracking-widest">
+                <div className="p-5 rounded-2xl border border-slate-200/50 bg-white/40">
+                  <p className="text-[10px] leading-relaxed text-slate-500 font-bold uppercase tracking-widest">
                     * Data sinkron dengan cloud database Cloud Supabase dan Vercel.
                   </p>
                 </div>
               </div>
             </div>
 
-            <section className="relative overflow-hidden bg-slate-900/40 backdrop-blur-md border border-slate-800/50 p-6 md:p-8 rounded-[2rem] shadow-2xl">
-              <div className="absolute top-0 right-10 w-40 h-1 bg-gradient-to-l from-emerald-500/50 to-transparent"></div>
-              <SectionTitle title="Input Transaksi" colorClass="bg-emerald-500" subtitle="Tambahkan trade baru ke jurnal" />
+            <section className="glass-card p-6 md:p-8 rounded-[2rem] relative overflow-hidden">
+              <div className="absolute top-0 right-10 w-40 h-1 bg-gradient-to-l from-blue-500/30 to-transparent"></div>
+              <SectionTitle title="Input Transaksi" subtitle="Tambahkan trade baru ke jurnal" />
               <TransactionForm onAddTrade={addTrade} />
             </section>
 
-            <section className="bg-slate-900/40 backdrop-blur-md border border-slate-800/50 p-6 md:p-8 rounded-[2rem] shadow-2xl">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 pb-6 border-b border-slate-900">
-                <SectionTitle title="Riwayat Perdagangan" colorClass="bg-blue-500" subtitle="Daftar lengkap transaksi Anda" />
+            <section className="glass-card p-6 md:p-8 rounded-[2rem]">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 pb-6 border-b border-slate-100">
+                <SectionTitle title="Riwayat Perdagangan" subtitle="Daftar lengkap transaksi Anda" />
                 <Filters filterRange={filterRange} setFilterRange={setFilterRange} sortBy={sortBy} setSortBy={setSortBy} />
               </div>
               <JournalTable trades={paginatedTrades} onDeleteTrade={deleteTrade} calculateIDR={calculateIDR} />
@@ -445,7 +415,6 @@ function App() {
                 onPageChange={setCurrentPage}
               />
             </section>
-
           </>
         )}
       </div>

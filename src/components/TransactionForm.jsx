@@ -24,8 +24,8 @@ const TransactionForm = ({ onAddTrade }) => {
         });
     };
 
-    const inputStyle = "w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-800 text-sm font-medium";
-    const labelStyle = "block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1";
+    const inputStyle = "glass-input text-slate-800 text-sm font-black w-full";
+    const labelStyle = "block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1 opacity-70";
 
     return (
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3 md:gap-4 items-end">
@@ -104,10 +104,10 @@ const TransactionForm = ({ onAddTrade }) => {
             <div className="lg:col-span-1">
                 <button
                     type="submit"
-                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-emerald-500/20 uppercase text-xs tracking-widest"
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-black py-4 px-4 rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-95 shadow-xl shadow-blue-500/10 uppercase text-xs tracking-[0.2em]"
                 >
-                    <Send size={16} />
-                    Simpan
+                    <PlusCircle size={16} />
+                    Submit Trade
                 </button>
             </div>
         </form>
