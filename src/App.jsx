@@ -23,6 +23,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Set to 10 for better visibility, user can change to 20
   const [loading, setLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const [syncStatus, setSyncStatus] = useState('cloud'); // 'cloud' | 'local' | 'error'
   const [monthlyTarget, setMonthlyTarget] = useState(() => {
     return parseFloat(localStorage.getItem('cent_journal_monthly_target')) || 10000;
@@ -73,7 +74,6 @@ function App() {
         }
 
         setSyncStatus('cloud');
-        return; // Success
       }
     } catch (error) {
       console.warn('Sync failed, using localStorage:', error.message);
@@ -104,6 +104,7 @@ function App() {
         }
       }
       setLoading(false);
+      setDataLoaded(true); // Signal that we have finished loading (from cloud or local)
     }
   };
 
@@ -113,6 +114,11 @@ function App() {
 
   // Sync Settings to DB (Debounced)
   useEffect(() => {
+    // CRITICAL: Don't sync until the initial data load is complete.
+    // Otherwise, we might overwrite the database with default values (500,000) 
+    // before the database has a chance to tell us the actual saved value.
+    if (!dataLoaded) return;
+
     localStorage.setItem('cent_journal_initial_balance', initialBalance);
     localStorage.setItem('cent_journal_monthly_target', monthlyTarget);
 
@@ -121,13 +127,13 @@ function App() {
         await supabase.from('settings').upsert([
           { key: 'initial_balance', value: initialBalance.toString() },
           { key: 'monthly_target', value: monthlyTarget.toString() }
-        ]);
+        ], { onConflict: 'key' });
       }
     };
 
     const timeoutId = setTimeout(syncSettings, 1000);
     return () => clearTimeout(timeoutId);
-  }, [initialBalance, monthlyTarget]);
+  }, [initialBalance, monthlyTarget, dataLoaded]);
 
 
 
