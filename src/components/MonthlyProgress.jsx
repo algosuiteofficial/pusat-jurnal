@@ -59,14 +59,14 @@ const MonthlyProgress = ({ currentMonthPnl, target, onUpdateTarget }) => {
                 <div className="flex justify-between items-end">
                     <div className="space-y-0.5">
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Profit Saat Ini</span>
-                        <p className={`text-xl font-black font-mono tracking-tighter ${currentMonthPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                            {currentMonthPnl.toLocaleString('id-ID')} <span className="text-[10px]">CENT</span>
+                        <p className={`text-xl font-black font-mono tracking-tighter ${(currentMonthPnl || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {(currentMonthPnl || 0).toLocaleString('id-ID')} <span className="text-[10px]">CENT</span>
                         </p>
                     </div>
                     <div className="text-right space-y-0.5">
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Target</span>
                         <p className="text-xl font-black font-mono tracking-tighter text-blue-400">
-                            {target.toLocaleString('id-ID')} <span className="text-[10px]">CENT</span>
+                            {(target || 0).toLocaleString('id-ID')} <span className="text-[10px]">CENT</span>
                         </p>
                     </div>
                 </div>
@@ -85,10 +85,10 @@ const MonthlyProgress = ({ currentMonthPnl, target, onUpdateTarget }) => {
 
                 <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-[0.2em]">
                     <span className={isTargetReached ? 'text-emerald-500' : 'text-slate-600'}>
-                        {isTargetReached ? '🎯 Target Tercapai!' : `${progress.toFixed(1)}% Terlampaui`}
+                        {isTargetReached ? '🎯 Target Tercapai!' : `${(progress || 0).toFixed(1)}% Terlampaui`}
                     </span>
                     <span className="text-slate-600">
-                        {Math.max(0, target - currentMonthPnl).toLocaleString('id-ID')} CENT Lagi
+                        {Math.max(0, (target || 0) - (currentMonthPnl || 0)).toLocaleString('id-ID')} CENT Lagi
                     </span>
                 </div>
             </div>

@@ -3,10 +3,10 @@ import { Calendar, ArrowUpDown, Filter } from 'lucide-react';
 
 const Filters = ({ filterRange, setFilterRange, sortBy, setSortBy }) => {
     return (
-        <div className="flex flex-wrap items-center gap-6">
-            <div className="flex items-center gap-3">
-                <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Jangkauan:</span>
-                <div className="flex bg-slate-950/50 p-1 rounded-xl border border-slate-800">
+        <div className="flex flex-wrap items-center gap-4 md:gap-6">
+            <div className="flex items-center gap-2 md:gap-3 max-w-full overflow-hidden">
+                <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest hidden sm:block">Jangkauan:</span>
+                <div className="flex bg-slate-950/50 p-1 rounded-xl border border-slate-800 overflow-x-auto no-scrollbar">
                     {[
                         { id: 'all', label: 'Semua' },
                         { id: 'week', label: 'Pekan' },
@@ -16,8 +16,8 @@ const Filters = ({ filterRange, setFilterRange, sortBy, setSortBy }) => {
                             key={range.id}
                             onClick={() => setFilterRange(range.id)}
                             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filterRange === range.id
-                                    ? 'bg-blue-600 text-white shadow-lg'
-                                    : 'text-slate-500 hover:text-slate-300'
+                                ? 'bg-blue-600 text-white shadow-lg'
+                                : 'text-slate-500 hover:text-slate-300'
                                 }`}
                         >
                             {range.label}

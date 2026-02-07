@@ -28,7 +28,7 @@ const TransactionForm = ({ onAddTrade }) => {
     const labelStyle = "block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1";
 
     return (
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 items-end">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3 md:gap-4 items-end">
             <div className="lg:col-span-1">
                 <label className={labelStyle}>Tanggal</label>
                 <input

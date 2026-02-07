@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+@layer base {
+
+    html,
+    body {
+        @apply overflow-x-hidden w-full relative;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    #root {
+        @apply overflow-x-hidden w-full;
+    }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
 @layer utilities {
     @keyframes shimmer {
         0% {

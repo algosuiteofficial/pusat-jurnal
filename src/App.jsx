@@ -40,46 +40,69 @@ function App() {
     try {
       if (!supabase) {
         setSyncStatus('local');
-        throw new Error('Supabase not configured');
+        // Don't throw if not configured, just proceed with local storage
+      } else {
+        // 1. Fetch Trades
+        const tradesRes = await supabase.from('trades').select('*').order('date', { ascending: false });
+        if (tradesRes.error) throw tradesRes.error;
+
+        const formattedTrades = (tradesRes.data || []).map(t => ({ ...t, pnlCent: t.pnl_cent || 0 }));
+        setTrades(formattedTrades);
+
+        // Update local storage as a fresh backup
+        localStorage.setItem('cent_journal_trades', JSON.stringify(formattedTrades));
+
+        // 2. Fetch Initial Balance from settings
+        const settingsRes = await supabase.from('settings').select('value').eq('key', 'initial_balance').maybeSingle();
+        if (settingsRes.data) {
+          const balance = parseFloat(settingsRes.data.value);
+          if (!isNaN(balance)) {
+            setInitialBalance(balance);
+            localStorage.setItem('cent_journal_initial_balance', balance);
+          }
+        }
+
+        // 3. Fetch Monthly Target
+        const targetRes = await supabase.from('settings').select('value').eq('key', 'monthly_target').maybeSingle();
+        if (targetRes.data) {
+          const target = parseFloat(targetRes.data.value);
+          if (!isNaN(target)) {
+            setMonthlyTarget(target);
+            localStorage.setItem('cent_journal_monthly_target', target);
+          }
+        }
+
+        setSyncStatus('cloud');
+        return; // Success
       }
-
-      // 1. Fetch Trades
-      const tradesRes = await supabase.from('trades').select('*').order('date', { ascending: false });
-      if (tradesRes.error) throw tradesRes.error;
-
-      const formattedTrades = tradesRes.data.map(t => ({ ...t, pnlCent: t.pnl_cent }));
-      setTrades(formattedTrades);
-
-      // Update local storage as a fresh backup
-      localStorage.setItem('cent_journal_trades', JSON.stringify(formattedTrades));
-
-      // 2. Fetch Initial Balance from settings
-      const settingsRes = await supabase.from('settings').select('value').eq('key', 'initial_balance').single();
-      if (settingsRes.data) {
-        const balance = parseFloat(settingsRes.data.value);
-        setInitialBalance(balance);
-        localStorage.setItem('cent_journal_initial_balance', balance);
-      }
-
-      // 3. Fetch Monthly Target
-      const targetRes = await supabase.from('settings').select('value').eq('key', 'monthly_target').single();
-      if (targetRes.data) {
-        const target = parseFloat(targetRes.data.value);
-        setMonthlyTarget(target);
-        localStorage.setItem('cent_journal_monthly_target', target);
-      }
-
-      setSyncStatus('cloud');
     } catch (error) {
       console.warn('Sync failed, using localStorage:', error.message);
       setSyncStatus('local');
-
-      const savedTrades = localStorage.getItem('cent_journal_trades');
-      if (savedTrades) setTrades(JSON.parse(savedTrades));
-
-      const savedBalance = localStorage.getItem('cent_journal_initial_balance');
-      if (savedBalance) setInitialBalance(parseFloat(savedBalance));
     } finally {
+      // Load from LocalStorage if sync failed or not configured
+      if (syncStatus === 'local' || !supabase) {
+        try {
+          const savedTrades = localStorage.getItem('cent_journal_trades');
+          if (savedTrades) {
+            const parsed = JSON.parse(savedTrades);
+            if (Array.isArray(parsed)) setTrades(parsed);
+          }
+
+          const savedBalance = localStorage.getItem('cent_journal_initial_balance');
+          if (savedBalance) {
+            const val = parseFloat(savedBalance);
+            if (!isNaN(val)) setInitialBalance(val);
+          }
+
+          const savedTarget = localStorage.getItem('cent_journal_monthly_target');
+          if (savedTarget) {
+            const val = parseFloat(savedTarget);
+            if (!isNaN(val)) setMonthlyTarget(val);
+          }
+        } catch (e) {
+          console.error("Local storage corruption:", e);
+        }
+      }
       setLoading(false);
     }
   };
@@ -302,7 +325,7 @@ function App() {
   );
 
   return (
-    <div className="min-h-screen bg-[#050810] text-slate-300 font-sans selection:bg-blue-500/30">
+    <div className="min-h-screen bg-[#050810] text-slate-300 font-sans selection:bg-blue-500/30 overflow-x-hidden w-full">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 -left-20 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px]"></div>
         <div className="absolute bottom-0 -right-20 w-96 h-96 bg-emerald-600/5 rounded-full blur-[120px]"></div>

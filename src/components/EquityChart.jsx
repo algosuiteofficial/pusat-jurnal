@@ -57,33 +57,53 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
     const [timeframe, setTimeframe] = useState('ALL'); // ALL, 1M, 1W
 
     const chartData = useMemo(() => {
+        if (!trades || trades.length === 0) {
+            return [{
+                id: 'start',
+                dateObj: new Date(),
+                name: 'START',
+                fullDate: 'Saldo Awal',
+                pnl: parseFloat(initialBalance || 0),
+                tradePnl: 0
+            }];
+        }
+
         // 1. Sort Data
         const sorted = [...trades].sort((a, b) => {
-            const dateDiff = new Date(a.date) - new Date(b.date);
+            const dateA = new Date(a.date || 0);
+            const dateB = new Date(b.date || 0);
+            const dateDiff = dateA - dateB;
             if (dateDiff !== 0) return dateDiff;
             return (a.id || 0) - (b.id || 0);
         });
 
         // 2. Build Cumulative Data
-        let cumulative = parseFloat(initialBalance);
+        let cumulative = parseFloat(initialBalance || 0);
         let lastDate = '';
 
         const fullData = [{
             id: 'start',
-            dateObj: new Date(0), // Old date for start
+            dateObj: sorted.length > 0 ? new Date(sorted[0].date) : new Date(),
             name: 'START',
             fullDate: 'Saldo Awal',
             pnl: parseFloat(cumulative.toFixed(2)),
             tradePnl: 0
         }];
 
+        // Adjust start date to be slightly before first trade
+        if (fullData[0].id === 'start' && sorted.length > 0) {
+            const d = new Date(sorted[0].date);
+            d.setMinutes(d.getMinutes() - 1);
+            fullData[0].dateObj = d;
+        }
+
         sorted.forEach((trade, idx) => {
             cumulative += parseFloat(trade.pnlCent || 0);
-            const outputDate = new Date(trade.date);
+            const outputDate = new Date(trade.date || Date.now());
             const dateStr = outputDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
 
             fullData.push({
-                id: trade.id,
+                id: trade.id || `trade-${idx}`,
                 dateObj: outputDate,
                 name: dateStr === lastDate ? '' : dateStr,
                 fullDate: outputDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' }) + ` (#${idx + 1})`,
@@ -102,7 +122,7 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
         if (timeframe === '1M') filterDate.setDate(now.getDate() - 30);
 
         // Find the first trade that satisfies the filter
-        const firstTradeIndex = fullData.findIndex(d => d.id !== 'start' && d.dateObj >= filterDate);
+        const firstTradeIndex = fullData.findIndex(d => d.id !== 'start' && d.id !== 'view_start' && d.dateObj >= filterDate);
 
         // If no data in range or all data is in range
         if (firstTradeIndex === -1) return [fullData[0]]; // Return just start if empty
@@ -164,7 +184,7 @@ const EquityChart = ({ trades, initialBalance = 0 }) => {
             <div className={`absolute inset-0 blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-1000 -z-10 ${chartData[chartData.length - 1]?.pnl >= initialBalance ? 'bg-emerald-500/5' : 'bg-rose-500/5'
                 }`}></div>
 
-            <div className="h-[350px] w-full mt-8 -ml-4">
+            <div className="h-[300px] md:h-[350px] w-full mt-12 md:mt-8 -ml-6 md:-ml-4">
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
                         <defs>
