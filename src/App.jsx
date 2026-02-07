@@ -337,7 +337,7 @@ function App() {
             <div className="space-y-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
-                  <h1 className="text-4xl md:text-6xl font-black tracking-[-0.08em] text-slate-900 border-b-4 border-blue-500/20 pb-1">
+                  <h1 className="text-5xl md:text-6xl font-black tracking-[-0.08em] text-slate-900 border-b-4 border-blue-500/20 pb-1">
                     JURNAL<span className="text-blue-500 font-light ml-1">CENT</span>
                   </h1>
                 </div>
